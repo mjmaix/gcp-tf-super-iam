@@ -1,0 +1,16 @@
+# GCP Settings
+gcp_project   = "sharedtfstate1"
+gcp_region    = "ap-southeast2"
+gcp_auth_file = "../auth/sharedtfstate1-03f48ec1e1c0.json"
+
+# service account
+super_sa_account_id = "tf-super-sa-pt-main"
+super_sa_name       = "PT project TF Automation Super Service Account"
+
+
+admin_members = [
+  "user:test@gmail.com",
+  "serviceAccount:sa-one@sharedtfstate1.iam.gserviceaccount.com"
+]
+
+
