@@ -11,7 +11,6 @@ $ export ENV=local-mja
 $ echo $ENV
 $ cp ./tfvars/terraform.tfvars.template ./tfvars/terraform-$ENV.tfvars
 
-$ cd src
 ```
 
 ## Init
