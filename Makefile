@@ -1,69 +1,79 @@
+SHELL := /bin/bash
+
 APP_NAME=tf-gcp-super-iam
 LOCATION=src
 
+###
+# References:
+# `$$VAR` - from shell, setenv.sh https://stackoverflow.com/a/67345506
+###
+
+
 
 # main tf commands
-init: check-credentials check-env check-tfstate-bucket
-# args: reconfigure=y to re-init
-	cd $(LOCATION) && \
-	terraform init \
-		-backend-config="bucket=$(TFSTATE_BUCKET)" \
-		-backend-config="prefix=$(ENV)/$(APP_NAME)" \
-		$(if $(findstring $(reconfigure), y), "-reconfigure", )
 
-plan: check-credentials check-env switch-workspace
-	GOOGLE_APPLICATION_CREDENTIALS=../auth/key-env-$(ENV).json \
-	cd $(LOCATION) && \
-	terraform plan \
-		-var-file="../tfvars/terraform-$(ENV).tfvars" \
-		-out="../plans/plan.$(ENV).out"
+###
+# init params
+# (optional) args: reconfigure=y to re-init
+###
+init: validate-envs
+	source ./setenv.sh && \
+	terraform \
+		-chdir=$(LOCATION) \
+		init \
+			-backend-config="bucket=$$TFSTATE_BUCKET" \
+			-backend-config="prefix=$${ENV}/$(APP_NAME)" \
+			$(if $(findstring $(reconfigure), y), "-reconfigure", )
 
-apply: check-credentials check-env switch-workspace
-	GOOGLE_APPLICATION_CREDENTIALS=../auth/key-env-$(ENV).json \
-	cd $(LOCATION) && \
-	terraform apply "../plans/plan.$(ENV).out"
+plan:  validate-envs switch-workspace
+	source ./setenv.sh && \
+	terraform \
+		-chdir=$(LOCATION) \
+		plan \
+			-var-file="../tfvars/terraform-$${ENV}.tfvars" \
+			-out="../plans/plan.$${ENV}.out"
 
-destroy: check-credentials check-env switch-workspace
-	GOOGLE_APPLICATION_CREDENTIALS=../auth/key-env-$(ENV).json \
-	cd $(LOCATION) && \
-	terraform plan \
-		-destroy \
-		-var-file="../tfvars/terraform-$(ENV).tfvars" \
-		-out="./plans/plan.$(ENV).out"
-	terraform apply "../plans/plan.$(ENV).out"
+apply:  validate-envs switch-workspace
+	source ./setenv.sh && \
+	terraform \
+		-chdir=$(LOCATION) \
+		apply \
+			"../plans/plan.$${ENV}.out"
+
+destroy:  validate-envs switch-workspace
+	source ./setenv.sh && \
+	terraform \
+		-chdir=$(LOCATION) \
+		plan \
+			-destroy \
+			-var-file="../tfvars/terraform-$${ENV}.tfvars" \
+			-out="./plans/plan.$${ENV}.out"
+	
+	source ./setenv.sh && \
+	terraform \
+		-chdir=$(LOCATION) \
+		apply "../plans/plan.$${ENV}.out"
+
+validate:  validate-envs 
+	source ./setenv.sh && \
+	terraform \
+			-chdir=$(LOCATION) \
+			validate
 
 reset: delete-workspace init new-workspace
 
-
 # utils
 
-new-workspace:
-	terraform workspace new $(ENV)
+new-workspace: validate-envs 
+	source ./setenv.sh && terraform workspace new $${ENV}
 
-switch-workspace:
-	terraform workspace select $(ENV)
+switch-workspace: validate-envs 
+	source ./setenv.sh && echo "ENV is $${ENV}"
+	source ./setenv.sh && terraform workspace select $${ENV}
 
-delete-workspace:
-	terraform workspace select default
-	terraform workspace delete $(ENV)
+delete-workspace: validate-envs 
+	source ./setenv.sh && terraform workspace select default
+	source ./setenv.sh && terraform workspace delete $${ENV}
 
-
-check-env:
-ifndef ENV
-	$(error ENV is undefined)
-endif
-
-check-tfstate-bucket:
-ifndef TFSTATE_BUCKET
-	$(error TFSTATE_BUCKET is undefined)
-endif
-
-check-credentials:
-ifndef GOOGLE_APPLICATION_CREDENTIALS
-	$(error GOOGLE_APPLICATION_CREDENTIALS is undefined)
-endif
-
-check-location:
-ifndef LOCATION
-	$(error LOCATION is not set)
-endif
+validate-envs:
+	$(source ./unsetenv.sh && source ./setenv.sh || echo "Command fialed $$?"; exit 1)
