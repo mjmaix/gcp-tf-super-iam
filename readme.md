@@ -102,6 +102,10 @@ Note: Each `make` command triggers `./unsetenv.sh` and `./setenv` to refresh and
 
 Beware: Apart from auto clear env and env validation mentioned on the 'note' above, `source ./setenv.sh && ` is prepended for each terraform cli command to load the `.env` environment variables for the same shell as terraform cli. Not using it on manual terraform command may cause wrong variables/old value.
 
+### Helper
+
+For other cli commands that require the project's environment variable, there is the [terraform-helper.sh](./terraform-helper.sh) file that already have auto reload of environment variables.
+
 # Contributing
 
 ## When to define variables
@@ -130,6 +134,8 @@ For any update of the project please always
 | ENV                            | The environment name. This is also used on the tfstate remote backend path                                       |
 | TFSTATE_BUCKET                 | Assigned storage bucket for the shared tfstate                                                                   |
 | GOOGLE_APPLICATION_CREDENTIALS | Service account key or other google credentials that have enough permission to execute all task of this project. |
+| LOCATION                       | Folder of the root terraform source `main.tf`                                                                    |
+| APP_NAME                       | App's name. Recommended to be similar with other envs. Used for `-backend-config="prefix=$$ENV/$$APP_NAME"`      |
 
 ## Terraform Variables
 
