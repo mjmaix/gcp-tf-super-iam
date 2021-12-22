@@ -44,3 +44,4 @@ terraform.rc
 plans/*.out
 auth/*.json
 .vscode/
+.env
