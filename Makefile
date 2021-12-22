@@ -25,7 +25,7 @@ init: validate-envs
 			-backend-config="prefix=$${ENV}/$(APP_NAME)" \
 			$(if $(findstring $(reconfigure), y), "-reconfigure", )
 
-plan:  validate-envs switch-workspace
+plan: validate-envs switch-workspace
 	source ./setenv.sh && \
 	terraform \
 		-chdir=$(LOCATION) \
@@ -33,28 +33,31 @@ plan:  validate-envs switch-workspace
 			-var-file="../tfvars/terraform-$${ENV}.tfvars" \
 			-out="../plans/plan.$${ENV}.out"
 
-apply:  validate-envs switch-workspace
+apply: validate-envs switch-workspace
 	source ./setenv.sh && \
 	terraform \
 		-chdir=$(LOCATION) \
 		apply \
 			"../plans/plan.$${ENV}.out"
 
-destroy:  validate-envs switch-workspace
+destroy-plan: validate-envs switch-workspace
 	source ./setenv.sh && \
 	terraform \
 		-chdir=$(LOCATION) \
 		plan \
 			-destroy \
 			-var-file="../tfvars/terraform-$${ENV}.tfvars" \
-			-out="./plans/plan.$${ENV}.out"
+			-out="../plans/plan.$${ENV}.out"
 	
+destroy: validate-envs switch-workspace
 	source ./setenv.sh && \
 	terraform \
 		-chdir=$(LOCATION) \
-		apply "../plans/plan.$${ENV}.out"
+		apply \
+		-destroy \
+		-var-file="../tfvars/terraform-$${ENV}.tfvars"
 
-validate:  validate-envs 
+validate: validate-envs 
 	source ./setenv.sh && \
 	terraform \
 			-chdir=$(LOCATION) \
